@@ -1,0 +1,248 @@
+<!DOCTYPE html> <!-- The new doctype -->
+<html>
+<head> <!-- No title and meta tags are necessary for the extension -->
+
+<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
+<link rel="stylesheet" type="text/css" href="css/style.css" />
+<script src="js/vendor/jquery-1.9.1.min.js"></script> <!-- Including jQuery -->
+<script src="js/vendor/jquery-migrate-1.1.1.min.js"></script>
+<!-- <script src="js/vendor/knockout-2.2.1.js"></script> -->
+<script src="js/vendor/knockout-2.2.1.debug.js"></script>
+<script src="js/options.js"></script> <!-- Our script file -->
+<!-- <script type="text/javascript" src="https://www.google.com/jsapi"></script> -->
+</head>
+
+<body>
+
+<div class="container">
+	<h3 class="main-text">Leangains Setting | MFP</h3>
+<div class="span12">
+
+<div id="schedule" class="span11">
+<!-- The latest tutorials are going to be inserted here -->
+	<h4>Schedule</h4>
+	<table id="lg-days" class="table table-bordered table-condensed table-hover table-striped">
+		<thead>
+		<tr>
+			<th>workout Days</th>
+			<th></th>
+			<th>Rest Days</th>
+		</tr>
+		</thead>
+		<tbody data-bind="foreach: lgSchedule">
+			<tr>
+				<td><input data-bind="value: abbr, attr: {'name': abbr, 'id': 'workout_'+abbr}, checked: (value > 0)" type="radio"></td>
+				<td><span data-bind="text: day"></span></td>
+				<td><input data-bind="value: abbr, attr: {'name': abbr, 'id': 'rest_'+abbr}, checked: (value > 0)" type="radio"></td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+<div id="calories" class="buffer span11">
+	<h4>Calories</h4>
+	<div class="lg-calories">
+		<div class="control-group">
+		<div class="split-container pull-left">
+			<p><strong>Workout Days</strong></p>
+			<div class="input-append">
+				<input data-bind="value: woCal" class="span4" id="wo-cal-input" type="text" placeholder="Rest day calories">
+				<span class="add-on">Cals</span>
+			</div>
+		</div>
+		</div>
+		<div class="control-group">
+		<div class="split-container pull-left">
+			<p><strong>Rest Days</strong></p>
+			<div class="input-append">
+				<input data-bind="value: rtCal" class="span4" id="rt-cal-input" type="text" placeholder="Workout day calories">
+				<span class="add-on">Cals</span>
+			</div>
+		</div>
+		</div>
+	</div>
+</div>
+<div id="macro" class="buffer span11">
+	<h4>Macro</h4>
+	<div class="lg-macro">
+		<div class="split-container pull-left">
+			<p><strong>Workout Days</strong></p>
+			<!-- ko foreach: woMacro -->
+			<div class="control-group">
+		    <div class="input-prepend input-append">
+		    	<span class="add-on" data-bind="text: type"></span>
+		    	<input data-bind="value: value, attr:{'id':'wo-'+type, 'placeholder': type+' macro in grams'}" class="span4" type="text">		    
+		    	<span class="add-on">g</span>
+		    </div>
+		    </div>
+		    <!-- /ko -->
+		</div>
+		<div class="split-container pull-right">
+			<p><strong>Rest Days</strong></p>
+			<!-- ko foreach: rtMacro -->
+			<div class="control-group">
+			<div class="input-prepend input-append">
+				<span class="add-on" data-bind="text: type"></span>
+				<input data-bind="value: value, attr:{'id':'rt-'+type, 'placeholder': type+' macro in grams'}" class="span4" type="text">			
+				<span class="add-on">g</span>
+			</div>
+			</div>
+			<!-- /ko -->
+		</div>
+	</div>
+</div>
+
+<div id="personal-data" class="buffer span11">
+	<h4>Personal Information</h4>
+	<p>Please enter your personal information to calculate your TDEE</p>
+
+	<div class="clearfix">
+	<div id="lg-gender" class="span3">
+		<p><strong>Gender</strong></p>
+		<div class="control-group">
+			<label class="radio">
+				<input type="radio" name="gender" id="gender_m" value="m">	
+				Male
+			</label>
+			<label class="radio">
+				<input type="radio" name="gender" id="gender_f" value="f">	
+				Female
+			</label>
+		</div>
+	</div>
+	<div id="lg-height" class="span5"> 
+		<p><strong>Height</strong></p>
+		<div class="row">
+			<div class="span2">
+				<div class="control-group">
+				<div class="input-append">
+					<input data-bind="value: heightFoot" id="height_ft" type="text" class="input-small watched" placeholder="in foot.">	
+					<span class="add-on">ft.</span>
+				</div>
+				</div>
+				<div class="input-append">
+					<input data-bind="value: heightCM" id="height_cm" type="text" class="input-small watched" placeholder="in cm." disabled>	
+					<span class="add-on">cm.</span>
+				</div>
+			</div>
+			<div class="span2">
+				<div class="control-group">
+				<div class="input-append">
+					<input data-bind="value: heightInch" id="height_in" type="text" class="input-small watched" placeholder="in inches.">	
+					<span class="add-on">in.</span>
+				</div>
+				</div>		
+			</div>
+		</div>
+	</div>
+	<div id="lg-weight" class="span2">
+		<p><strong>Weight</strong></p>
+		<div class="control-group">
+		<div class="input-append">
+			<input data-bind="value: weight" id="weight_lb" type="text" class="input-small watched" placeholder="in lb.">		
+			<span class="add-on">lb.</span>
+		</div>
+		</div>
+		<div class="input-append">
+			<input data-bind="value: weightKG" id="weight_kg" type="text" class="input-small watched" placeholder="in kg." disabled>		
+			<span class="add-on">kg.</span>
+		</div>
+	</div>
+	</div>
+	<hr>
+
+	<div class="clearfix">
+	<div id="lg-age" class="span3">
+		<p><strong>Age</strong></p>
+		<div class="control-group">
+		<div class="input-append">
+		 <input data-bind="value: age" id="age" type="text" class="input-small watched" placeholder="0">
+		 <span class="add-on">yr.</span>
+		</div>
+		</div>		
+	</div>
+	<div id="lg-activity" class="span4">
+		<p><strong>Activity</strong></p>
+		<div class="control-group">
+		<select id="activity" data-bind="options: activityOptions, optionsText: 'type', optionsValue: 'value', optionsCaption: 'Select...'" class="watched"></select>
+		</div>
+	</div>
+	<div id="lg-bf" class="span3">
+		<p><strong>Body fat %</strong></p>
+		<div class="control-group">
+		<div class="input-append">
+			<input id="body_fat" type="text" class="input-small watched" placeholder="0">		
+			<span class="add-on">%</span>
+		</div>
+		</div>
+		(optional)
+	</div>
+	</div>
+
+</div>
+
+<div id="summary" class="span11">
+	<h4>Summary</h4>
+
+	<div id="lg-bmr" class="clearfix">
+		<p><strong>BMR</strong></p>
+		<div class="input-append">
+			<input class="span2" id="bmr" type="text">
+			<span class="add-on">Cals</span>
+		</div>
+		<span class="help-inline">(Mifflin-St.Jeor Formula has been used for this calculation.)</span>
+	</div>
+
+	<hr>
+
+	<div class="row">
+	
+		<div id="lg-total-week-expenditure" class="span4">
+			<p><strong>Week TEE</strong></p>
+			<div class="input-append">
+				<input class="span2" id="twee" type="text">
+				<span class="add-on">Cals</span>
+			</div>
+		</div>	
+
+		<div id="lg-total-daily-expenditure" class="span4">
+			<p><strong>TDEE</strong></p>
+			<div class="input-append">
+				<input class="span2" id="tdee" type="text">
+				<span class="add-on">Cals</span>
+			</div>
+		</div>
+		<div id="lg-week-enery" class="span3">
+
+			<div class="">
+				<p><strong>Week Calories:</strong> <span class="week_cal"></span></p>
+			</div>
+			<div class="">
+				<p><strong>Week Over/Under:</strong> <span class="week_diff"></span></p>
+			</div>
+			<div class="">
+				<p><strong>Week Change:</strong> <span class="week_change"></span></p>
+			</div>
+		</div>
+
+	</div>
+
+	<hr>
+</div>
+
+
+
+<div id="submit-form" class="span4">
+	<button id="submit" type="submit" class="btn btn-primary">Save changes</button>
+	<button id="delete" type="button" class="btn btn-danger">Reset</button>
+</div>
+
+
+
+<div id="piechart" class="row">
+	<div id="wo-pie" class=""></div>
+	<div id="rt-pie" class=""></div>
+</div>
+</div>
+</div>
+</body>
+</html>
