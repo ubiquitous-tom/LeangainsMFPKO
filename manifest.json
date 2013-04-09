@@ -25,7 +25,7 @@
 	"content_scripts": [{
 		"matches": [ "*://*.myfitnesspal.com/food/diary/*"],
 		"css": [ "css/style.css" ],
-		"js": [ "js/vendor/jquery-1.9.1.min.js", "js/vendor/jquery-migrate-1.1.1.min.js", "js/vendor/raphael-min.js", "js/vendor/g.raphael-min.js", "js/vendor/g.pie-min.js", "js/main.js"]
+		"js": [ "js/vendor/jquery-1.9.1.min.js", "js/vendor/jquery-migrate-1.1.1.min.js", "js/vendor/knockout-2.2.1.debug.js", "js/vendor/raphael-min.js", "js/vendor/g.raphael-min.js", "js/vendor/g.pie-min.js", "js/main.js"]
 	}],
 
 	"content_security_policy": "script-src 'self' 'unsafe-eval' https://*.google.com https://*.googleapis.com; object-src 'self'"

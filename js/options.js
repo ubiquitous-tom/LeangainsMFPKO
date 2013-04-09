@@ -1,14 +1,52 @@
+var defaultLG = {
+	lgSchedule: [
+		{abbr:'m', day:'Monday', woValue:'true', rtValue:'false'}, 
+		{abbr:'t', day:'Tuesday', woValue:'false', rtValue:'true'}, 
+		{abbr:'w', day:'Wednesday', woValue:'true', rtValue:'false'}, 
+		{abbr:'th', day:'Thursday', woValue:'false', rtValue:'true'}, 
+		{abbr:'f', day:'Friday', woValue:'true', rtValue:'false'}, 
+		{abbr:'sa', day:'Saturday', woValue:'false', rtValue:'true'}, 
+		{abbr:'su', day:'sunday', woValue:'false', rtValue:'true'}
+	],
+	woCal: undefined,
+	rtCal: undefined,
+	woMacro: [{type:'protein', value:undefined}, {type:'carbs',value:undefined}, {type:'fat',value:undefined}],
+	rtMacro: [{type:'protein', value:undefined}, {type:'carbs',value:undefined}, {type:'fat',value:undefined}],
+	gender: 'm',
+	heightFoot: undefined,
+	heightInch: undefined,
+	weight: undefined,
+	age: undefined,
+	activity: undefined
+};
+var defaultLGtom = {
+	lgSchedule: [
+		{abbr:'m', day:'Monday', woValue:'true', rtValue:'false'}, 
+		{abbr:'t', day:'Tuesday', woValue:'false', rtValue:'true'}, 
+		{abbr:'w', day:'Wednesday', woValue:'true', rtValue:'false'}, 
+		{abbr:'th', day:'Thursday', woValue:'false', rtValue:'true'}, 
+		{abbr:'f', day:'Friday', woValue:'true', rtValue:'false'}, 
+		{abbr:'sa', day:'Saturday', woValue:'false', rtValue:'true'}, 
+		{abbr:'su', day:'sunday', woValue:'false', rtValue:'true'}
+	],
+	woCal: 1984,
+	rtCal: 1543,
+	woMacro: [{type:'protein', value:180}, {type:'carbs',value:237}, {type:'fat',value:35.1}],
+	rtMacro: [{type:'protein', value:180}, {type:'carbs',value:51.4}, {type:'fat',value:68.6}],
+	gender: 'm',
+	heightFoot: 5,
+	heightInch: 11,
+	weight: 180,
+	age: 33,
+	activity: 0
+};
 $(document).ready(function(){
 	chrome.storage.local.get('lg', function(items) {
-		console.log('lg: ',items.lg);
-		lg = items.lg;
-
-		if (lg) {
-			ko.applyBindings(new LeangainsMFPModel(lg));
-		} else {
-			//alert('Please enter your Leangains info');
-			ko.applyBindings(new leangainsMFPNewModel());
-		}
+		//console.log('lg: ',items.lg);
+		//var lg = JSON.parse(items.lg) || defaultLGtom;
+		var lg = $.parseJSON(items.lg) || defaultLGtom;
+		//console.log(lg);
+		ko.applyBindings(new LeangainsMFPModel(lg));
 	});
 
 	chrome.storage.onChanged.addListener(function(changes, namespace) {
@@ -25,334 +63,303 @@ $(document).ready(function(){
 
 });
 
+ko.extenders.required = function(target, overrideMessage) {
+    //add some sub-observables to our observable
+	//console.log(target());
+    target.hasError = ko.observable();
+    target.validationMessage = ko.observable();
+ 
+    //define a function to do validation
+    function validate(newValue) {
+    	var rx = new RegExp(/^\d+(?:\.\d{1,2})?$/);
+    	var myRegexp = /^\d+(?:\.\d{1,2})?$/;
+    	var match = myRegexp.exec(newValue);
+    	if (match != null) {
+    		console.log(match);
+    		console.log(parseFloat(match[0]).toFixed(2));
+    	}
+       	target.hasError(rx.test(newValue) ? 'success' : 'error');
+       	target.validationMessage(rx.test(newValue) ? "" : overrideMessage || "This field is required");
+    }
+ 
+    //initial validation
+    validate(target());
+ 
+    //validate whenever the value changes
+    target.subscribe(validate);
+ 
+    //return the original observable
+    return target;
+};
 
-function leangainsMFPNewModel() {
+function womacro(type, value, thisself) {
 	var self = this;
-
-	self.lgSchedule = ko.observableArray([
-		{'abbr':'m', 'day':'Monday', 'value':1}, 
-		{'abbr':'t', 'day':'Tuesday', 'value':0}, 
-		{'abbr':'w', 'day':'Wednesday', 'value':1}, 
-		{'abbr':'th', 'day':'Thursday', 'value':0}, 
-		{'abbr':'f', 'day':'Friday', 'value':1}, 
-		{'abbr':'sa', 'day':'Saturday', 'value':0}, 
-		{'abbr':'su', 'day':'sunday', 'value':0}
-	]);
-
-	self.woCal = ko.observable();
-	self.rtCal = ko.observable();
-
-	self.woMacro = ko.observableArray([{'type':'protein', 'value':''}, {'type':'carbs','value':''}, {'type':'fat','value':''}]);
-	self.rtMacro = ko.observableArray([{'type':'protein', 'value':''}, {'type':'carbs','value':''}, {'type':'fat','value':''}]);
-	//self.gender = ko.observable('m');
-
-	self.gender = ko.observable();
-
-	self.heightFoot = ko.observable(); 
-	self.heightInch = ko.observable();
-	self.heightCM = ko.computed(function(){
-		if (!isNaN(self.heightFoot) && !isNaN(self.heightInch) )
-		return (self.heightFoot*12 + self.heightInch) * 2.54;
-	});
-
-	self.weight = ko.observable();
-	self.weightKG = ko.computed(function(){
-		return result = (self.weight*2.2).toFixed(2);
-	});
-
-	self.age = ko.observable();
-
-	self.activityOptions = ko.observableArray([
-		{"type":"Sedentary", "value":0}, 
-		{"type":"Lightly Active", "value":1}, 
-		{"type":"Moderately Active", "value":2}, 
-		{"type":"Very Active", "value":3}, 
-		{"type":"extremely Active", "value":4}
-	]);
-	self.activity = ko.observable();
+	self.type = type;
+	self.value = ko.observable(value).extend({ required: "" });
+	if(type === 'protein') thisself.woProtein = ko.observable(value).extend({ required: "" });
+	if(type === 'carbs') thisself.woCarbs = ko.observable(value).extend({ required: "" });
+	if(type === 'fat') thisself.woFat = ko.observable(value).extend({ required: "" });
+	//self.value = ko.observable(value).extend({ required: "" });
 }
+
+function rtmacro(type, value, thisself) {
+	var self = this;
+	self.type = type;
+	self.value = ko.observable(value).extend({ required: "" });
+	if(type === 'protein') thisself.rtProtein =  ko.observable(value).extend({ required: "" });
+	if(type === 'carbs') thisself.rtCarbs =  ko.observable(value).extend({ required: "" });
+	if(type === 'fat') thisself.rtFat =  ko.observable(value).extend({ required: "" });
+	//self.value = ko.observable(value).extend({ required: "" });
+}
+
+function macro(type, value) {
+	var self = this;
+	self.type = type;
+	self.value = ko.observable(value).extend({ required: "" });
+}
+
 
 function LeangainsMFPModel(lg) {
+	console.log(lg);
 	var self = this;
-	var defaultLG = ko.observableArray([
-		woDays = {m:1, t:0, w:1, th:0, f:1, sa:0, su:0},
-		woCal = 0,
-		rtCal = 0,
-		woMacro = {protein:0, carbs:0, fat:0},
-		rtMacro = {protein:0, carbs:0, fat:0},
-		personalData = {gender:'m', height_ft:0, height_in:0, weight_lb:0, age:0, activity:0}
-	]);
+	self.lgSchedule = ko.observableArray(lg.lgSchedule);
 
-	self.woCal = ko.observable(lg.woCal);
-	self.rtCal = ko.observable(lg.rtCal);
+	self.woCal = ko.observable(lg.woCal).extend({ required: "" });
+	self.rtCal = ko.observable(lg.rtCal).extend({ required: "" });
 
-	self.woProtein = ko.observable(lg.woMacro.protein);
-	self.woCarbs = ko.observable(lg.woMacro.carbs);
-	self.woFat = ko.observable(lg.woMacro.fat);
-	self.rtProtein = ko.observable(lg.rtMacro.protein);
-	self.rtCarbs = ko.observable(lg.rtMacro.carbs);
-	self.rtFat = ko.observable(lg.rtMacro.fat);
-
-	self.heightFoot = ko.observable(lg.ht.foot);
-	self.heightInch = ko.observable(lg.ht.inch);
-	self.heightCM = ko.computed(function(){
-		return (self.heightFoot*12 + self.heightInch) * 2.54;
-	});
-
-	self.weight = ko.observable(lg.weight);
-	self.weightKG = ko.computed(function(){
-		return (self.weight*2.2).tofixed(2);
-	});
-
-	self.bmr = 
-	tdee, twee, week_cal, week_diff;
-
-}
-
-
-var lg = {};
-var woDays = {m:1, t:0, w:1, th:0, f:1, sa:0, su:0};
-var rtDays = {m:0, t:0, w:0, th:0, f:0, sa:0, su:0};
-var woCal = 0;
-var rtCal = 0;
-var woMacro = {protein:0, carbs:0, fat:0};
-var rtMacro = {protein:0, carbs:0, fat:0};
-var personalData = {gender:'m', height_ft:0, height_in:0, weight_lb:0, age:0, activity:0};
-var bmr, tdee, twee, week_cal, week_diff;
-var z = 0;
-
-function load_options() {
-	chrome.storage.local.get('lg', function(items) {
-		console.log('lg: ',items.lg);
-		lg = items.lg;
-	
-		if (lg) {
-			woDays = (lg.woDays) ? lg.woDays : woDays;
-			woCal = (lg.woCal) ? lg.woCal : woCal;
-			rtCal = (lg.rtCal) ? lg.rtCal : rtCal;
-			woMacro = (lg.woMacro) ? lg.woMacro : woMacro;
-			rtMacro = (lg.rtMacro) ? lg.rtMacro : rtMacro;
-			for (var day in woDays) {
-				if (woDays[day] == 1) {
-					// console.log('if');
-					rtDays[day] = 0;
-				} else { 
-					// console.log('else');
-					rtDays[day] = 1; 
-				}
-			}
-			console.log(woDays, woCal, woMacro, rtDays, rtCal, rtMacro);
-			restore_options();
-		} else {
-			alert('Please enter your Leangains info');
-			$('#workout_m,#rest_t,#workout_w,#rest_th,#workout_f,#rest_sa,#rest_su,#gender_m').attr('checked',"checked");
-		}
-	});
-
-}
-
-function save_options() {
-	var wods = {};
-	$('[id^=workout_]').each(function(ind, el) {
-		//console.log(ind+': '+el.id+' - '+el.value+' @ '+$(el).prop('checked'));
-		wods[el.value] = ($(el).prop('checked')) ? 1 : 0;
-	});
-	// console.log(wods);
-	
-	var rtds = {};;
-	$('[id^=rest_]').each(function(ind, el) {
-		//console.log(ind+': '+el.id+' - '+el.value+' @ '+$(el).prop('checked'));
-		rtds[el.value] = ($(el).prop('checked')) ? 1 : 0;
-	});
-	// console.log(rtds);
-
-	var woc = $('#wo-cal-input').val();
-	var rtc = $('#rt-cal-input').val();
-	// console.log(woc,rtc);
-
-	var womac = {protein:$('#wo-protein').val(), carbs:$('#wo-carbs').val(), fat:$('#wo-fat').val()}
-	var rtmac = {protein:$('#rt-protein').val(), carbs:$('#rt-carbs').val(), fat:$('#rt-fat').val()}
-	// console.log(womac,rtmac);
-
-	var gender = $('[name=gender]:checked').val();
-	console.log('gender: ',gender);
-
-	var hf = $('#height_ft').val();
-	var hi = $('#height_in').val();
-	console.log(hf,hi);
-
-	var wl = $('#weight_lb').val();
-	console.log(wl);
-
-	var ag = $('#age').val();
-	console.log(ag);
-
-	var ac = $('#activity').val();
-	console.log(ac);
-
-	var theValue = {woDays:wods, rtds:rtds, woCal:woc, rtCal:rtc, woMacro:womac, rtMacro:rtmac, gender:gender, ht:{foot:hf, inch:hi}, weight:wl, age:ag, activity:ac};
-	chrome.storage.local.set({'lg': theValue}, function() {
-		// Notify that we saved.
-		console.log('Settings saved');
-	});
-
-}
-
-function delete_options() {
-    chrome.storage.local.remove('lg', function() {
-        // Notify that we saved.
-        console.log('Settings removed');
-        location.reload();
-    });
-}
-
-function restore_options() {
-	
-
-	// load days for workout days and rest days
-	for (var wd  in woDays) {
-		// console.log('in for', wd);
-		if (woDays[wd] == 1) { 
-			// console.log(woDays[wd],wd);
-			$('#workout_'+wd).attr("checked", true);
-			// console.log('#workout_'+wd, $('#workout_'+wd).val());
-			// console.log('in if');
-		} else {
-			$('#rest_'+wd).attr("checked", true);
-		}
+	var newWoMacro = [];
+	for(var i=0;i<lg.woMacro.length;i++) {
+		// console.log('loop #', i);
+		// console.log('for macro', lg.woMacro[i]);
+		// console.log(lg.woMacro[i].type, lg.woMacro[i].value);
+		// newWoMacro.push( new womacro(lg.woMacro[i].type, lg.woMacro[i].value, self) );
+		newWoMacro.push( new macro(lg.woMacro[i].type, lg.woMacro[i].value) );
 	}
 
-	// load Calories for workout day and rest day
-	$('#wo-cal-input').val(woCal);
-	$('#rt-cal-input').val(rtCal);
+	var newRtMacro = [];
+	for(var i=0;i<lg.rtMacro.length;i++) {
+		// console.log('loop #', i);
+		// console.log('for macro', lg.rtMacro[i]);
+		// console.log(lg.rtMacro[i].type, lg.rtMacro[i].value);
+		// newRtMacro.push( new rtmacro(lg.rtMacro[i].type, lg.rtMacro[i].value, self) );
+		newRtMacro.push( new macro(lg.rtMacro[i].type, lg.rtMacro[i].value) );
+	}
 
-	// load Macro for workout day and rest day
-	$('#wo-protein').val(parseFloat(woMacro.protein).toFixed(2));
-	$('#wo-carbs').val(parseFloat(woMacro.carbs).toFixed(2));
-	$('#wo-fat').val(parseFloat(woMacro.fat).toFixed(2));
-	$('#rt-protein').val(parseFloat(rtMacro.protein).toFixed(2));
-	$('#rt-carbs').val(parseFloat(rtMacro.carbs).toFixed(2));
-	$('#rt-fat').val(parseFloat(rtMacro.fat).toFixed(2));
 
-	// load personal data
-	// console.log(lg.activity);
-	$('#gender_'+lg.gender).attr('checked','checked');
-	$('#height_ft').val(lg.ht.foot);
-	$('#height_in').val(lg.ht.inch);
-	$('#height_cm').val((parseFloat(lg.ht.foot*12)+parseFloat(lg.ht.inch))*2.54);
-	$('#weight_lb').val(lg.weight);
-	$('#weight_kg').val(parseFloat(lg.weight/2.2).toFixed(2));
-	$('#age').val(lg.age);
-	$('#activity').val(lg.activity);
+	self.woMacro = ko.observableArray(newWoMacro);
+	self.rtMacro = ko.observableArray(newRtMacro);
+	//self.gender = ko.observable('m');
+	// self.fieldStatus = ko.computed({
+	// 	read: function(val) {
+	// 		console.log('read val: ',self.woCal());
+	// 	},
+	// 	write: function(val) {
+	// 		console.log('write val: ', val);
+	// 	}
+	// });
 
-	// Calculate TDEE and all that good stuff
-	do_the_bmr();
-	check_input();
-}
+	self.gender = ko.observable(lg.gender);
 
-function do_the_bmr() {
-	var bmr_ar = [];
-	var bmr_gender = $('[name=gender]:checked').val();
-	$('.watched').each(function(ind, el){
-		//console.log(ind, el, $(el).val());
-		bmr_ar[$(el).attr('id')] = $(el).val();
+	self.heightFoot = ko.observable(lg.heightFoot).extend({ required: "" });
+	self.heightInch = ko.observable(lg.heightInch).extend({ required: "" });
+	self.heightCM = ko.computed(function(){
+		//console.log(self, self.heightFoot(), self.heightInch());
+		var cm_height = (parseFloat(self.heightFoot())*12 + parseFloat(self.heightInch()) ) * 2.54;
+		return !isNaN(cm_height) ? cm_height.toFixed(2) : undefined;
 	});
-	console.log(bmr_ar);
-	var cal_type = (bmr_ar.body_fat.length == 0) ? 1 : 0; 
-	var cal_variable = (bmr_gender == 'm') ? 5 : -161;
-	bmr = Math.floor( (10*bmr_ar.weight_kg)+(6.25*bmr_ar.height_cm)-(5*bmr_ar.age)+(cal_variable) );
-	$('#bmr').val( bmr );
-	do_the_tdee();
+
+	self.weight = ko.observable(lg.weight).extend({ required: "" });
+	self.weightKG = ko.computed(function(){
+		var kg_weight = parseFloat(self.weight())/2.2;
+		return !isNaN(kg_weight) ? kg_weight.toFixed(2) : undefined;
+	});
+
+	self.age = ko.observable(lg.age).extend({ required: "" });
+
+	self.activityOptions = ko.observableArray([
+		{type:"Sedentary", value:0, multiplier: 1.2}, 
+		{type:"Lightly Active", value:1, multiplier: 1.375}, 
+		{type:"Moderately Active", value:2, multiplier: 1.55}, 
+		{type:"Very Active", value:3, multiplier: 1.725}, 
+		{type:"extremely Active", value:4, multiplier: 1.9}
+	]);
+	self.activity = ko.observable(lg.activity).extend({ required: "" });
+
+	self.bmr = ko.computed(function(){
+		//console.log(self.weightKG(), self.heightCM(), self.age(), self.gender());
+		var cal_variable = (self.gender() == 'm') ? 5 : -161;
+		var weight_ready = self.weightKG() !== undefined ? true : false;
+		var height_ready = self.heightCM() !== undefined ? true : false;
+		var age_ready = self.age() !== undefined && self.age() !== '' ? true : false;
+		//console.log(weight_ready, height_ready, age_ready, cal_variable);
+		if (weight_ready && height_ready && age_ready)
+		return Math.floor( (10*self.weightKG())+(6.25*self.heightCM())-(5*self.age())+(cal_variable) );			
+	});
+
+	self.tdee = ko.computed(function(){
+		//console.log('tdee read');
+		var activityObject = self.activityOptions()[self.activity()];
+		if(activityObject !== undefined) {
+			//console.log(self.bmr(), activityObject.multiplier);
+			return !isNaN(self.bmr()) ? Math.floor(self.bmr()*activityObject.multiplier) : undefined;
+		}
+	});
+
+	self.twee = ko.computed(function(){
+		return !isNaN(self.tdee()) ? self.tdee()*7 : undefined;
+	});
+
+	self.weekCal = ko.computed(function(){
+		var wo_days = 0
+		var rt_days = 0;
+		ko.utils.arrayForEach(self.lgSchedule(), function(item){
+			if (item.woValue === 'true') wo_days++;
+			if (item.rtValue === 'true') rt_days++;
+		});
+		//console.log(self.woCal(), wo_days, self.rtCal() ,rt_days, self.woCal()*wo_days, self.rtCal()*rt_days);
+		if (self.woCal() !== undefined && self.rtCal() !== undefined) {
+			return self.woCal()*wo_days + self.rtCal()*rt_days;
+		}
+	});
+
+	self.weekDiff = ko.computed(function(){
+		return !isNaN(self.weekCal()) ? self.weekCal()-self.twee() : undefined;
+	});
+	self.weekChange = ko.computed(function(){
+		return !isNaN(self.weekDiff()) ? parseFloat(self.weekDiff())/3500 : undefined;
+	});
+
+	// self.rtChartProtein = ko.observable();
+	// self.rtChartCarbs = ko.observable();
+	// self.rtChartFat = ko.observable();
+	self.rtChart = ko.computed(function(){
+		console.log('in rtChart:', self.rtMacro());
+		// ko.utils.arrayForEach(self.rtMacro(), function(item){
+		// 	console.log(item.type+': '+ item.value);
+		// 	if(item.type === 'protein') {
+		// 		self.rtChartProtein(item.value);
+		// 	}
+		// 	if(item.type === 'carbs') {
+		// 		self.rtChartCarbs(item.value);
+		// 	}
+		// 	if(item.type === 'fat') {
+		// 		self.rtChartFat(item.value);
+		// 	}
+		// });
+		//console.log(self.woChartProtein(),self.woChartCarbs(),self.woChartFat());
+		// var macro = ko.utils.arrayMap(self.rtMacro(), function(item) {
+	 //        return item.value();
+	 //    });
+		return make_pie_chart(
+					'rt-pie', 
+					self.rtMacro()[0].value(), 
+					self.rtMacro()[1].value(), 
+					self.rtMacro()[2].value(), 
+					'Rest Ratio'
+				);
+		});
+
+	// self.woChartProtein = ko.observable();
+	// self.woChartCarbs = ko.observable();
+	// self.woChartFat = ko.observable();
+	self.woChart = ko.computed(function(){
+		console.log('in woChart:', self.woMacro());
+		// ko.utils.arrayForEach(self.woMacro(), function(item){
+		// 	//console.log(item.type+': '+ item.value);
+		// 	if(item.type === 'protein') {
+		// 		self.woChartProtein(item.value);
+		// 	}
+		// 	if(item.type === 'carbs') {
+		// 		self.woChartCarbs(item.value);
+		// 	}
+		// 	if(item.type === 'fat') {
+		// 		self.woChartFat(item.value);
+		// 	}
+		// });
+		//console.log(self.woChartProtein(),self.woChartCarbs(),self.woChartFat());
+		return make_pie_chart(
+					'wo-pie', 
+					self.woMacro()[0].value(), 
+					self.woMacro()[1].value(), 
+					self.woMacro()[2].value(), 
+					'Workout Ratio'
+				);
+	});
+
+	self.chart = ko.computed(function(){
+		//console.log(self.woChart() && self.rtChart());
+		return self.woChart() && self.rtChart();
+	});
+
+	self.saveData = ko.computed({
+		read: function(){},
+		write: function(value){
+			// console.log('value: ',  ko.toJSON(value));
+			 var rawData = ko.toJSON(value);
+			// delete rawData.activityOptions;
+			// delete rawData.bmr;
+			// delete rawData.tdee;
+			// delete rawData.twee;
+			// delete rawData.weekCal;
+			// delete rawData.weekDiff;
+			// delete rawData.weekChange;
+			// console.log('rawData: ', rawData);
+			chrome.storage.local.set({'lg': rawData}, function() {
+				// Notify that we saved.
+				console.log('Settings saved');
+			});
+		}
+	});
+
+	self.deleteData = ko.computed({
+		read: function() {},
+		write: function(){
+		    chrome.storage.local.remove('lg', function() {
+		        // Notify that we saved.
+		        console.log('Settings removed');
+		        location.reload();
+		    });
+		}
+	});
+
 }
 
-function do_the_tdee() {
-	var activity_level = {0:1.2, 1:1.375, 2:1.55, 3:1.725, 4:1.9};
-	var activity_multiplier = activity_level[$('#activity').val()];
-	console.log(bmr,activity_multiplier);
-	tdee = Math.floor(bmr*activity_multiplier);
-	$('#tdee').val(tdee);
-	do_the_twee();
-}
-
-function do_the_twee() {
-	twee = tdee * 7;
-	$('#twee').val(twee);
-	do_the_week_cal();
-}
-
-function do_the_week_cal() {
-	week_cal = parseInt($('#wo-cal-input').val())*3 + parseInt($('#rt-cal-input').val())*4;
-	$('.week_cal').text(week_cal);
-	do_the_week_diff();
-	add_pos_neg('.week_cal', week_cal);
-}
-
-function do_the_week_diff() {
-	week_diff = week_cal-twee;
-	$('.week_diff').text(week_diff);
-	do_the_week_change();
-	add_pos_neg('.week_diff', week_diff);
-}
-
-function do_the_week_change() {
-	var week_change = parseFloat(week_diff/3500);
-	$('.week_change').text(week_change);
-	add_pos_neg('.week_change', week_change);
-	if (z++ < 1) $('#bmr,#tdee,#twee').parent().wrap('<div class="control-group info"></div>');
-}
-
-function add_pos_neg(ele_name, value) {
-	var the_class = (value > 0) ? 'positive' : 'negative';
-	$(ele_name).addClass(the_class);
-}
-
-function check_input() {
-	console.log('check_input');
-	$('.control-group').find('input[value!=""]').end().addClass('success');
-}
-
-$(document).ready(function() {
-	//load_options();
-	//restore_options();
-	//save_options();
-
-	// chrome.storage.onChanged.addListener(function(changes, namespace) {
-	//   for (key in changes) {
-	//     var storageChange = changes[key];
-	//     console.log('Storage key "%s" in namespace "%s" changed. ' +
-	//                 'Old value was "%s", new value is "%s".',
-	//                 key,
-	//                 namespace,
-	//                 storageChange.oldValue,
-	//                 storageChange.newValue);
-	//   }
-	// });
-		
-	// $('#submit').click(function(e){
-	// 	e.preventDefault();
-	// 	save_options();
-	// 	console.log('submit');
-	// });
-
-	// $('#delete').click(function(e){
-	// 	e.preventDefault();
-	// 	delete_options();
-	// 	console.log('delete');
-	// });
-
-	// $('#height_ft,#height_in').focusout(function(){
-	// 	if ($(this).val()) {
-	// 		$('#height_cm').val( (parseFloat($('#height_ft').val()*12) + parseFloat($('#height_in').val())) *2.54);
-	// 	}
-	// });
-
-	// $('#weight_lb').focusout(function(){
-	// 	if ($(this).val()) {
-	// 		$('#weight_kg').val(parseFloat($('#weight_lb').val()/2.2).toFixed(2));
-	// 	}
-	// });
+function make_pie_chart(e, p, c, f, h) {
+	//console.log(e, p, c, f, h);
 	
-	// $('.watched').focusout(function(){do_the_bmr()});
-	// $('[name=gender]').change(function(){do_the_bmr()});
-	// $('input').focusout(function(){console.log('yay');check_input();});
-});
+    var t = Raphael(e),
+        pie = t.piechart(120, 140, 100, [p, c, f], { 
+            legend: ["%%.%% ("+p+") - Protein", "%%.%% ("+c+") - Net Carbs", "%%.%% ("+f+") - Fat"],
+            colors: ["#E48701", "#A5BC4E", "#1B95D9"],
+            matchColors: true,
+            legendpos: "south", 
+            defcut: true,
+            //href: ["http://raphaeljs.com", "http://g.raphaeljs.com"]
+        });
+console.log(t);
+    t.text(120, 10, h).attr({ font: "20px sans-serif" });
+    pie.hover(function () {
+        this.sector.stop();
+        this.sector.scale(1.1, 1.1, this.cx, this.cy);
+
+        if (this.label) {
+            this.label[0].stop();
+            this.label[0].attr({ r: 7.5 });
+            this.label[1].attr({ "font-weight": 800 });
+        }
+    }, function () {
+        this.sector.animate({ transform: 's1 1 ' + this.cx + ' ' + this.cy }, 500, "bounce");
+
+        if (this.label) {
+            this.label[0].animate({ r: 5 }, 500, "bounce");
+            this.label[1].attr({ "font-weight": 400 });
+        }
+    });
+    console.log('pie: ', pie);
+    //console.log(p !== undefined && c !== undefined && f !== undefined);
+    return (p !== undefined && c !== undefined && f !== undefined) ? true : false;
+}
+
+function animate(el, ms) {
+
+}

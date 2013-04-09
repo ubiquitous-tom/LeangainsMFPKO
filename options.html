@@ -8,6 +8,10 @@
 <script src="js/vendor/jquery-migrate-1.1.1.min.js"></script>
 <!-- <script src="js/vendor/knockout-2.2.1.js"></script> -->
 <script src="js/vendor/knockout-2.2.1.debug.js"></script>
+<script src="js/vendor/knockout.validation.js"></script>
+<script src="js/vendor/raphael-min.js"></script>
+<script src="js/vendor/g.raphael-min.js"></script>
+<script src="js/vendor/g.pie-min.js"></script>
 <script src="js/options.js"></script> <!-- Our script file -->
 <!-- <script type="text/javascript" src="https://www.google.com/jsapi"></script> -->
 </head>
@@ -31,9 +35,9 @@
 		</thead>
 		<tbody data-bind="foreach: lgSchedule">
 			<tr>
-				<td><input data-bind="value: abbr, attr: {'name': abbr, 'id': 'workout_'+abbr}, checked: (value > 0)" type="radio"></td>
+				<td><input data-bind="attr: {name: abbr, id: 'workout-'+abbr, value: woValue}, checked: 'true'" type="radio"></td>
 				<td><span data-bind="text: day"></span></td>
-				<td><input data-bind="value: abbr, attr: {'name': abbr, 'id': 'rest_'+abbr}, checked: (value > 0)" type="radio"></td>
+				<td><input data-bind="attr: {name: abbr, id: 'rest-'+abbr, value: rtValue}, checked: 'true'" type="radio"></td>
 			</tr>
 		</tbody>
 	</table>
@@ -41,21 +45,23 @@
 <div id="calories" class="buffer span11">
 	<h4>Calories</h4>
 	<div class="lg-calories">
-		<div class="control-group">
+		<div data-bind="css: woCal.hasError" class="control-group">
 		<div class="split-container pull-left">
 			<p><strong>Workout Days</strong></p>
 			<div class="input-append">
-				<input data-bind="value: woCal" class="span4" id="wo-cal-input" type="text" placeholder="Rest day calories">
+				<input data-bind="value: woCal, valueUpdate: 'afterkeydown'" class="span4" id="wo-cal" type="text" placeholder="Rest day calories">
 				<span class="add-on">Cals</span>
+				<!-- <span data-bind='visible: woCal.hasError, text: woCal.validationMessage'> </span> -->
 			</div>
 		</div>
 		</div>
-		<div class="control-group">
+		<div data-bind="css: rtCal.hasError" class="control-group">
 		<div class="split-container pull-left">
 			<p><strong>Rest Days</strong></p>
 			<div class="input-append">
-				<input data-bind="value: rtCal" class="span4" id="rt-cal-input" type="text" placeholder="Workout day calories">
+				<input data-bind="value: rtCal, valueUpdate: 'afterkeydown'" class="span4" id="rt-cal" type="text" placeholder="Workout day calories">
 				<span class="add-on">Cals</span>
+				<!-- <span data-bind='visible: rtCal.hasError, text: rtCal.validationMessage'> </span> -->
 			</div>
 		</div>
 		</div>
@@ -67,10 +73,10 @@
 		<div class="split-container pull-left">
 			<p><strong>Workout Days</strong></p>
 			<!-- ko foreach: woMacro -->
-			<div class="control-group">
+			<div data-bind="css: value.hasError" class="control-group">
 		    <div class="input-prepend input-append">
 		    	<span class="add-on" data-bind="text: type"></span>
-		    	<input data-bind="value: value, attr:{'id':'wo-'+type, 'placeholder': type+' macro in grams'}" class="span4" type="text">		    
+		    	<input data-bind="value: value, attr:{'id':'wo-'+type, 'placeholder': type+' macro in grams'}, valueUpdate: 'afterkeydown'" class="span4" type="text">		    
 		    	<span class="add-on">g</span>
 		    </div>
 		    </div>
@@ -79,14 +85,14 @@
 		<div class="split-container pull-right">
 			<p><strong>Rest Days</strong></p>
 			<!-- ko foreach: rtMacro -->
-			<div class="control-group">
-			<div class="input-prepend input-append">
-				<span class="add-on" data-bind="text: type"></span>
-				<input data-bind="value: value, attr:{'id':'rt-'+type, 'placeholder': type+' macro in grams'}" class="span4" type="text">			
-				<span class="add-on">g</span>
-			</div>
-			</div>
-			<!-- /ko -->
+			<div data-bind="css: value.hasError" class="control-group">
+		    <div class="input-prepend input-append">
+		    	<span class="add-on" data-bind="text: type"></span>
+		    	<input data-bind="value: value, attr:{'id':'rt-'+type, 'placeholder': type+' macro in grams'}, valueUpdate: 'afterkeydown'" class="span4" type="text">		    
+		    	<span class="add-on">g</span>
+		    </div>
+		    </div>
+		    <!-- /ko -->
 		</div>
 	</div>
 </div>
@@ -100,11 +106,11 @@
 		<p><strong>Gender</strong></p>
 		<div class="control-group">
 			<label class="radio">
-				<input type="radio" name="gender" id="gender_m" value="m">	
+				<input type="radio" name="gender" id="gender_m" value="m" data-bind="checked: gender">	
 				Male
 			</label>
 			<label class="radio">
-				<input type="radio" name="gender" id="gender_f" value="f">	
+				<input type="radio" name="gender" id="gender_f" value="f" data-bind="checked: gender">	
 				Female
 			</label>
 		</div>
@@ -113,9 +119,9 @@
 		<p><strong>Height</strong></p>
 		<div class="row">
 			<div class="span2">
-				<div class="control-group">
+				<div data-bind="css: heightFoot.hasError" class="control-group">
 				<div class="input-append">
-					<input data-bind="value: heightFoot" id="height_ft" type="text" class="input-small watched" placeholder="in foot.">	
+					<input data-bind="value: heightFoot, valueUpdate: 'afterkeydown'" id="height_ft" type="text" class="input-small watched" placeholder="in foot.">	
 					<span class="add-on">ft.</span>
 				</div>
 				</div>
@@ -125,9 +131,9 @@
 				</div>
 			</div>
 			<div class="span2">
-				<div class="control-group">
+				<div data-bind="css: heightInch.hasError" class="control-group">
 				<div class="input-append">
-					<input data-bind="value: heightInch" id="height_in" type="text" class="input-small watched" placeholder="in inches.">	
+					<input data-bind="value: heightInch, valueUpdate: 'afterkeydown'" id="height_in" type="text" class="input-small watched" placeholder="in inches.">	
 					<span class="add-on">in.</span>
 				</div>
 				</div>		
@@ -136,14 +142,14 @@
 	</div>
 	<div id="lg-weight" class="span2">
 		<p><strong>Weight</strong></p>
-		<div class="control-group">
+		<div data-bind="css: weight.hasError" class="control-group">
 		<div class="input-append">
-			<input data-bind="value: weight" id="weight_lb" type="text" class="input-small watched" placeholder="in lb.">		
+			<input data-bind="value: weight, valueUpdate: 'afterkeydown'" id="weight_lb" type="text" class="input-small watched" placeholder="in lb.">		
 			<span class="add-on">lb.</span>
 		</div>
 		</div>
 		<div class="input-append">
-			<input data-bind="value: weightKG" id="weight_kg" type="text" class="input-small watched" placeholder="in kg." disabled>		
+			<input data-bind="value: weightKG, valueUpdate: 'afterkeydown'" id="weight_kg" type="text" class="input-small watched" placeholder="in kg." disabled>		
 			<span class="add-on">kg.</span>
 		</div>
 	</div>
@@ -153,17 +159,17 @@
 	<div class="clearfix">
 	<div id="lg-age" class="span3">
 		<p><strong>Age</strong></p>
-		<div class="control-group">
+		<div data-bind="css: age.hasError" class="control-group">
 		<div class="input-append">
-		 <input data-bind="value: age" id="age" type="text" class="input-small watched" placeholder="0">
+		 <input data-bind="value: age, valueUpdate: 'afterkeydown'" id="age" type="text" class="input-small watched" placeholder="0">
 		 <span class="add-on">yr.</span>
 		</div>
 		</div>		
 	</div>
 	<div id="lg-activity" class="span4">
 		<p><strong>Activity</strong></p>
-		<div class="control-group">
-		<select id="activity" data-bind="options: activityOptions, optionsText: 'type', optionsValue: 'value', optionsCaption: 'Select...'" class="watched"></select>
+		<div data-bind="css: activity.hasError" class="control-group">
+		<select id="activity" data-bind="options: activityOptions, optionsText: 'type', optionsValue: 'value', optionsCaption: 'Select...', value: activity" class="watched"></select>
 		</div>
 	</div>
 	<div id="lg-bf" class="span3">
@@ -185,11 +191,13 @@
 
 	<div id="lg-bmr" class="clearfix">
 		<p><strong>BMR</strong></p>
+		<div class="control-group">
 		<div class="input-append">
-			<input class="span2" id="bmr" type="text">
+			<input data-bind="value: bmr" class="span2" id="bmr" type="text" disabled>
 			<span class="add-on">Cals</span>
 		</div>
 		<span class="help-inline">(Mifflin-St.Jeor Formula has been used for this calculation.)</span>
+		</div>
 	</div>
 
 	<hr>
@@ -198,29 +206,33 @@
 	
 		<div id="lg-total-week-expenditure" class="span4">
 			<p><strong>Week TEE</strong></p>
+			<div class="control-group">
 			<div class="input-append">
-				<input class="span2" id="twee" type="text">
+				<input data-bind="value: twee, valueUpdate: 'afterkeydown'" class="span2" id="twee" type="text" disabled>
 				<span class="add-on">Cals</span>
+			</div>
 			</div>
 		</div>	
 
 		<div id="lg-total-daily-expenditure" class="span4">
 			<p><strong>TDEE</strong></p>
+			<div class="control-group">
 			<div class="input-append">
-				<input class="span2" id="tdee" type="text">
+				<input data-bind="value: tdee, valueUpdate: 'afterkeydown'" class="span2" id="tdee" type="text" disabled>
 				<span class="add-on">Cals</span>
+			</div>
 			</div>
 		</div>
 		<div id="lg-week-enery" class="span3">
 
 			<div class="">
-				<p><strong>Week Calories:</strong> <span class="week_cal"></span></p>
+				<p><strong>Week Calories:</strong> <span data-bind="text: weekCal" class="week_cal"></span></p>
 			</div>
 			<div class="">
-				<p><strong>Week Over/Under:</strong> <span class="week_diff"></span></p>
+				<p><strong>Week Over/Under:</strong> <span data-bind="text: weekDiff" class="week_diff"></span></p>
 			</div>
 			<div class="">
-				<p><strong>Week Change:</strong> <span class="week_change"></span></p>
+				<p><strong>Week Change:</strong> <span data-bind="text: weekChange" class="week_change"></span></p>
 			</div>
 		</div>
 
@@ -232,17 +244,18 @@
 
 
 <div id="submit-form" class="span4">
-	<button id="submit" type="submit" class="btn btn-primary">Save changes</button>
-	<button id="delete" type="button" class="btn btn-danger">Reset</button>
+	<button data-bind="click: saveData" id="submit" class="btn btn-primary">Save changes</button>
+	<button data-bind="click: deleteData" id="delete" class="btn btn-danger">Reset</button>
 </div>
 
 
 
-<div id="piechart" class="row">
-	<div id="wo-pie" class=""></div>
-	<div id="rt-pie" class=""></div>
+<div data-bind="visible: chart" id="piechart" class="row">
+	<div data-bind="visible: woChart" id="wo-pie"></div>
+	<div date-bind="visible: rtChart" id="rt-pie"></div>
 </div>
 </div>
 </div>
+<pre data-bind="text: ko.toJSON($root, null, 2)"></pre>
 </body>
 </html>

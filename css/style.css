@@ -20,3 +20,6 @@ body {margin: 0; background: #ccc;}
 
 .positive {color:#468847;}
 .negative {color:#b94a48;}
+
+#wo-pie {width:300px;float:left;}
+#rt-pie {width:300px;float:left;}

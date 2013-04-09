@@ -1,4 +1,9 @@
-var today_type;
+var woDays = {m:1, t:0, w:1, th:0, f:1, sa:0, su:0};
+var rtDays = {m:0, t:0, w:0, th:0, f:0, sa:0, su:0};
+var woCal = 0;
+var rtCal = 0;
+var woMacro = {protein:0, carbs:0, fat:0};
+var rtMacro = {protein:0, carbs:0, fat:0};
 var cal_index, carbs_index, fiber_index, fat_index, protien_index;
 var t_cal, t_carbs, t_fiber, t_fat, t_protein, tf_cal, tf_carbs, tf_fiber, tf_fat, tf_protein;
 var tt_cal, tt_carbs, tt_fiber, tt_fat, tt_protein, ttf_cal, ttf_carbs, ttf_fiber, ttf_fat, ttf_protein;
@@ -29,76 +34,99 @@ function get_table_column() {
 
 function load_options() {
     chrome.storage.local.get('lg', function(items) {
-        // console.log('lg: ',items.lg);
+        console.log('lg: ',items.lg);
         lg = items.lg;
 
         if (lg) {
-            var lg = jQuery.parseJSON(items.lg) || defaultLG;
-            // console.log(lg);
-            ko.applyBindings(new LeangainsMFPModel(lg));
+    
+            woDays = (lg.woDays) ? lg.woDays : woDays;
+            woCal = (lg.woCal) ? lg.woCal : woCal;
+            rtCal = (lg.rtCal) ? lg.rtCal : rtCal;
+            woMacro = (lg.woMacro) ? lg.woMacro : woMacro;
+            rtMacro = (lg.rtMacro) ? lg.rtMacro : rtMacro;
+            for (var day in woDays) {
+                if (woDays[day] == 1) {
+                    // console.log('if');
+                    rtDays[day] = 0;
+                } else { 
+                    // console.log('else');
+                    rtDays[day] = 1; 
+                }
+            }
+            // console.log(woDays, woCal, woMacro, rtDays, rtCal, rtMacro);
+            //restore_options();
+            set_today_type();
+            inject_daily_cal_macro();
+            recalculate_remaining();
+            add_net_carb_column();
+            get_total_today_macro();
+            make_pie_chart();
         } else {
-           alert('you need to fill in your info in the option page first.');
+            alert('you need to fill in your info in the option page first.');
         }
     });
 
 }
 
-function LeangainsMFPModel(lg) {
-    //console.log(lg);
-    var self = this;
-    set_today_type(lg);
-    inject_daily_cal_macro(lg);
-    recalculate_remaining();
-    add_net_carb_column();
-    get_total_today_macro();
-    make_pie_chart();
-}
-
-function set_today_type(lg) {
-    var retrieved_date = jQuery('#date_selector').val().split('-');
-    var today = new Date(retrieved_date[0], retrieved_date[1]-1, retrieved_date[2]);
-    today_type = get_today_type(today);
-    // console.log(type);
-    // console.log(lg.lgSchedule[type].woValue);
-    var day_type = lg.lgSchedule[today_type].woValue === 'true' ? 'WorkOut Day' : 'Rest Day';
-    var day_type_div = jQuery('<div></div>').addClass('day-type')
-    var h1 = jQuery('<h1></h1>').text('Today is a '+day_type);
-    jQuery('.container').prepend(jQuery(day_type_div).append(h1));
-}
-
 function get_today_type(date) {
     var d = new Date(date);
     var weekday = new Array(7);
-    weekday[0] = 6;
-    weekday[1] = 0;
-    weekday[2] = 1;
-    weekday[3] = 2;
-    weekday[4] = 3;
-    weekday[5] = 4;
-    weekday[6] = 5;
+    weekday[0] = "su";
+    weekday[1] = "m";
+    weekday[2] = "t";
+    weekday[3] = "w";
+    weekday[4] = "th";
+    weekday[5] = "f";
+    weekday[6] = "sa";
 
-    return weekday[d.getDay()];
+    var n = weekday[d.getDay()];
+    //var today = days[n];
+    // console.log(d.getDay());
+    return n;
 }
 
-function inject_daily_cal_macro(lg) {
+
+function set_today_type() {
+    // console.log(jQuery('#date_selector').val());
+    var retrieved_date = jQuery('#date_selector').val().split('-');
+    // console.log(retrieved_date);
+    var today = new Date(retrieved_date[0], retrieved_date[1]-1, retrieved_date[2]);
+    // console.log(today);
+    // console.log(type);
+    // console.log(get_today_type(today));
+    var type = get_today_type(today);
+    // console.log(woDays[type]);
+    if (woDays[type]) {
+        day_type = 'WorkOut Day';
+        tf_cal = lg.woCal;
+        tf_carbs = lg.woMacro.carbs;
+        tf_fat = lg.woMacro.fat;
+        tf_protein = lg.woMacro.protein;
+        t_cal = Math.ceil(lg.woCal);
+        t_carbs = Math.ceil(lg.woMacro.carbs);
+        t_fat = Math.ceil(lg.woMacro.fat);
+        t_protein = Math.ceil(lg.woMacro.protein);
+    } else { 
+        day_type = 'Rest Day';
+        t_cal = Math.ceil(lg.rtCal);
+        t_carbs = Math.ceil(lg.rtMacro.carbs);
+        t_fat = Math.ceil(lg.rtMacro.fat);
+        t_protein = Math.ceil(lg.rtMacro.protein);
+        tf_cal = lg.rtCal;
+        tf_carbs = lg.rtMacro.carbs;
+        tf_fat = lg.rtMacro.fat;
+        tf_protein = lg.rtMacro.protein;
+    };
+    // console.log(day_type);
+    var day_type_div = jQuery('<div></div>').addClass('day-type')
+    var h1 = jQuery('<h1></h1>').text('Today is a '+day_type);
+    jQuery('.container').prepend(jQuery(day_type_div).append(h1));
+    
+}
+
+function inject_daily_cal_macro() {
+    // console.log(t_cal,t_carbs,t_fat,t_protein,cal_index);
     //console.log(jQuery('.total.alt').find('td:eq('+cal_index+')').text());
-    // console.log(lg.woMacro.length);
-    if (lg.lgSchedule[today_type].woValue) {
-        t_cal = lg.woCal;
-        for (var i=0;i<lg.woMacro.length;i++) {
-            if (lg.woMacro[i].type === 'carbs') t_carbs = lg.woMacro[i].value;
-            if (lg.woMacro[i].type === 'fat') t_fat = lg.woMacro[i].value;
-            if (lg.woMacro[i].type === 'protein') t_protein = lg.woMacro[i].value;
-        }
-    } else {
-        t_cal = lg.rtCal;
-        for (var i=0;i<lg.rtMacro.length;i++) {
-            if (lg.rtMacro[i].type === 'carbs') t_carbs = lg.rtMacro[i].value;
-            if (lg.rtMacro[i].type === 'fat') t_fat = lg.rtMacro[i].value;
-            if (lg.rtMacro[i].type === 'protein') t_protein = lg.rtMacro[i].value;
-        }
-    }
-    // console.log(t_cal, t_carbs, t_fat, t_protein);
     jQuery('.total.alt')
     .find('td:eq('+cal_index+')').text(t_cal).end()
     .find('td:eq('+carbs_index+')').text(t_carbs).end()
