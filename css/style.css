@@ -11,6 +11,8 @@ body {margin: 0; background: #ccc;}
 /* Option Page */
 .container {background:#fff;margin: 30px auto; border-radius: 10px;}
 .split-container {width:50%;}
+.split-container-input {width:40%;}
+.split-container-slider {width:60%;}
 .main-text {text-align: center;}
 
 #lg-days th, #lg-days  td {text-align: center !important; width:30%;}
@@ -21,5 +23,19 @@ body {margin: 0; background: #ccc;}
 .positive {color:#468847;}
 .negative {color:#b94a48;}
 
-#wo-pie {width:300px;float:left;}
-#rt-pie {width:300px;float:left;}
+#wo-pie {width:450px;float:left;}
+#rt-pie {width:450px;float:left;}
+
+.ui-slider-horizontal { height: .5em; }
+/*.ui-slider-horizontal .ui-slider-handle { top: -.3em; }*/
+.ui-slider .ui-slider-handle { width: 1em; height: 1em; }
+#wo-protein-slider .ui-state-default, #wo-protein-slider .ui-widget-content .ui-state-default, #wo-protein-slider .ui-widget-header .ui-state-default,
+#rt-protein-slider .ui-state-default, #rt-protein-slider .ui-widget-content .ui-state-default, #rt-protein-slider .ui-widget-header .ui-state-default { background: #e48701; }
+#wo-carbs-slider .ui-state-default, #wo-carbs-slider .ui-widget-content .ui-state-default, #wo-carbs-slider .ui-widget-header .ui-state-default,
+#rt-carbs-slider .ui-state-default, #rt-carbs-slider .ui-widget-content .ui-state-default, #rt-carbs-slider .ui-widget-header .ui-state-default { background: #a5bc4e; }
+#wo-fat-slider .ui-state-default, #wo-fat-slider .ui-widget-content .ui-state-default, #wo-fat-slider .ui-widget-header .ui-state-default,
+#rt-fat-slider .ui-state-default, #rt-fat-slider .ui-widget-content .ui-state-default, #rt-fat-slider .ui-widget-header .ui-state-default { background: #1b95d9; }
+
+.input-prepend.input-append .add-on:first-child { width: 45px; } 
+.input-prepend.input-append input { width: 45px; }
+.jslider { width: 225px; margin: 10px 0 30px; }

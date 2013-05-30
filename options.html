@@ -3,9 +3,11 @@
 <head> <!-- No title and meta tags are necessary for the extension -->
 
 <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
+<link rel="stylesheet" type="text/css" href="css/ui-lightness/jquery-ui-1.10.2.custom.min.css">
 <link rel="stylesheet" type="text/css" href="css/style.css" />
 <script src="js/vendor/jquery-1.9.1.min.js"></script> <!-- Including jQuery -->
 <script src="js/vendor/jquery-migrate-1.1.1.min.js"></script>
+<script src="js/vendor/jquery-ui-1.10.2.custom.min.js"></script>
 <!-- <script src="js/vendor/knockout-2.2.1.js"></script> -->
 <script src="js/vendor/knockout-2.2.1.debug.js"></script>
 <script src="js/vendor/knockout.validation.js"></script>
@@ -42,6 +44,27 @@
 		</tbody>
 	</table>
 </div>
+
+<div id="lg-split" class="span11">
+	<div id="lg-wo-rt-split" class="span4">
+		<p><strong>Leangains Split</strong></p>
+		<div data-bind="css: split.hasError" class="control-group">
+		<select id="split" data-bind="options: splitOptions, optionsText: 'type', optionsValue: 'value', optionsCaption: 'Select...', value: split"></select>
+		</div>
+	</div>
+	<div id="lg-wo-rt-macro-split" class="span4">
+		<p><strong>Leangains Split</strong></p>
+		<div data-bind="css: macroSplit.hasError" class="control-group">
+		<select id="split" data-bind="options: macroSplitOptions, optionsText: 'type', optionsValue: 'value', optionsCaption: 'Select...', value: macroSplit"></select>
+		</div>
+	</div>
+</div>
+
+<div data-bind="visible: chart" id="piechart" class="row">
+	<div data-bind="visible: woChart" id="wo-pie"></div>
+	<div date-bind="visible: rtChart" id="rt-pie"></div>
+</div>
+
 <div id="calories" class="buffer span11">
 	<h4>Calories</h4>
 	<div class="lg-calories">
@@ -49,7 +72,7 @@
 		<div class="split-container pull-left">
 			<p><strong>Workout Days</strong></p>
 			<div class="input-append">
-				<input data-bind="value: woCal, valueUpdate: 'afterkeydown'" class="span4" id="wo-cal" type="text" placeholder="Rest day calories">
+				<input data-bind="value: woCal, valueUpdate: 'afterkeydown'" class="span4" id="wo-cal" type="text" placeholder="Rest day calories" disabled>
 				<span class="add-on">Cals</span>
 				<!-- <span data-bind='visible: woCal.hasError, text: woCal.validationMessage'> </span> -->
 			</div>
@@ -59,7 +82,7 @@
 		<div class="split-container pull-left">
 			<p><strong>Rest Days</strong></p>
 			<div class="input-append">
-				<input data-bind="value: rtCal, valueUpdate: 'afterkeydown'" class="span4" id="rt-cal" type="text" placeholder="Workout day calories">
+				<input data-bind="value: rtCal, valueUpdate: 'afterkeydown'" class="span4" id="rt-cal" type="text" placeholder="Workout day calories" disabled>
 				<span class="add-on">Cals</span>
 				<!-- <span data-bind='visible: rtCal.hasError, text: rtCal.validationMessage'> </span> -->
 			</div>
@@ -72,27 +95,41 @@
 	<div class="lg-macro">
 		<div class="split-container pull-left">
 			<p><strong>Workout Days</strong></p>
+			<div class="split-container-input pull-left">
 			<!-- ko foreach: woMacro -->
 			<div data-bind="css: value.hasError" class="control-group">
 		    <div class="input-prepend input-append">
 		    	<span class="add-on" data-bind="text: type"></span>
-		    	<input data-bind="value: value, attr:{'id':'wo-'+type, 'placeholder': type+' macro in grams'}, valueUpdate: 'afterkeydown'" class="span4" type="text">		    
+		    	<input data-bind="value: value, attr:{'id':'wo-'+type, 'placeholder': type+' macro in grams'}" class="span4" type="text">	    
 		    	<span class="add-on">g</span>
-		    </div>
+		    </div>	
 		    </div>
 		    <!-- /ko -->
+		    </div>
+		    <div class="split-container-slider pull-left">
+		    <!-- ko foreach: woMacro -->
+		    	<div data-bind="jSlider: {type: type, value: value}, attr:{'id':'wo-'+type+'-slider'}" class="jslider"></div>
+		    <!-- /ko -->
+		    </div>
 		</div>
 		<div class="split-container pull-right">
 			<p><strong>Rest Days</strong></p>
+			<div class="split-container-input pull-left">
 			<!-- ko foreach: rtMacro -->
 			<div data-bind="css: value.hasError" class="control-group">
 		    <div class="input-prepend input-append">
 		    	<span class="add-on" data-bind="text: type"></span>
-		    	<input data-bind="value: value, attr:{'id':'rt-'+type, 'placeholder': type+' macro in grams'}, valueUpdate: 'afterkeydown'" class="span4" type="text">		    
+		    	<input data-bind="value: value, attr:{'id':'rt-'+type, 'placeholder': type+' macro in grams'}" class="span4" type="text">		    
 		    	<span class="add-on">g</span>
 		    </div>
 		    </div>
 		    <!-- /ko -->
+			</div>
+			<div class="split-container-slider pull-left">
+		    <!-- ko foreach: woMacro -->
+		    	<div data-bind="jSlider: {type: type, value: value}, attr:{'id':'rt-'+type+'-slider'}" class="jslider"></div>
+		    <!-- /ko -->
+		    </div>
 		</div>
 	</div>
 </div>
@@ -121,19 +158,21 @@
 			<div class="span2">
 				<div data-bind="css: heightFoot.hasError" class="control-group">
 				<div class="input-append">
-					<input data-bind="value: heightFoot, valueUpdate: 'afterkeydown'" id="height_ft" type="text" class="input-small watched" placeholder="in foot.">	
+					<input data-bind="value: heightFoot" id="height_ft" type="text" class="input-small" placeholder="in foot.">	
 					<span class="add-on">ft.</span>
 				</div>
 				</div>
+				<div data-bind="css: heightCM.hasError" class="control-group">
 				<div class="input-append">
-					<input data-bind="value: heightCM" id="height_cm" type="text" class="input-small watched" placeholder="in cm." disabled>	
+					<input data-bind="value: heightCM" id="height_cm" type="text" class="input-small" placeholder="in cm.">	
 					<span class="add-on">cm.</span>
+				</div>
 				</div>
 			</div>
 			<div class="span2">
 				<div data-bind="css: heightInch.hasError" class="control-group">
 				<div class="input-append">
-					<input data-bind="value: heightInch, valueUpdate: 'afterkeydown'" id="height_in" type="text" class="input-small watched" placeholder="in inches.">	
+					<input data-bind="value: heightInch" id="height_in" type="text" class="input-small" placeholder="in inches.">	
 					<span class="add-on">in.</span>
 				</div>
 				</div>		
@@ -144,13 +183,15 @@
 		<p><strong>Weight</strong></p>
 		<div data-bind="css: weight.hasError" class="control-group">
 		<div class="input-append">
-			<input data-bind="value: weight, valueUpdate: 'afterkeydown'" id="weight_lb" type="text" class="input-small watched" placeholder="in lb.">		
+			<input data-bind="value: weight" id="weight_lb" type="text" class="input-small" placeholder="in lb.">		
 			<span class="add-on">lb.</span>
 		</div>
 		</div>
+		<div data-bind="css: weightKG.hasError" class="control-group">
 		<div class="input-append">
-			<input data-bind="value: weightKG, valueUpdate: 'afterkeydown'" id="weight_kg" type="text" class="input-small watched" placeholder="in kg." disabled>		
+			<input data-bind="value: weightKG" id="weight_kg" type="text" class="input-small" placeholder="in kg.">		
 			<span class="add-on">kg.</span>
+		</div>
 		</div>
 	</div>
 	</div>
@@ -161,7 +202,7 @@
 		<p><strong>Age</strong></p>
 		<div data-bind="css: age.hasError" class="control-group">
 		<div class="input-append">
-		 <input data-bind="value: age, valueUpdate: 'afterkeydown'" id="age" type="text" class="input-small watched" placeholder="0">
+		 <input data-bind="value: age, valueUpdate: 'afterkeydown'" id="age" type="text" class="input-small" placeholder="0">
 		 <span class="add-on">yr.</span>
 		</div>
 		</div>		
@@ -169,19 +210,19 @@
 	<div id="lg-activity" class="span4">
 		<p><strong>Activity</strong></p>
 		<div data-bind="css: activity.hasError" class="control-group">
-		<select id="activity" data-bind="options: activityOptions, optionsText: 'type', optionsValue: 'value', optionsCaption: 'Select...', value: activity" class="watched"></select>
+		<select id="activity" data-bind="options: activityOptions, optionsText: 'type', optionsValue: 'value', optionsCaption: 'Select...', value: activity"></select>
 		</div>
 	</div>
-	<div id="lg-bf" class="span3">
+	<!-- <div id="lg-bf" class="span3">
 		<p><strong>Body fat %</strong></p>
 		<div class="control-group">
 		<div class="input-append">
-			<input id="body_fat" type="text" class="input-small watched" placeholder="0">		
+			<input id="body_fat" type="text" class="input-small" placeholder="0">		
 			<span class="add-on">%</span>
 		</div>
 		</div>
 		(optional)
-	</div>
+	</div> -->
 	</div>
 
 </div>
@@ -241,19 +282,11 @@
 	<hr>
 </div>
 
-
-
 <div id="submit-form" class="span4">
 	<button data-bind="click: saveData" id="submit" class="btn btn-primary">Save changes</button>
 	<button data-bind="click: deleteData" id="delete" class="btn btn-danger">Reset</button>
 </div>
 
-
-
-<div data-bind="visible: chart" id="piechart" class="row">
-	<div data-bind="visible: woChart" id="wo-pie"></div>
-	<div date-bind="visible: rtChart" id="rt-pie"></div>
-</div>
 </div>
 </div>
 <pre data-bind="text: ko.toJSON($root, null, 2)"></pre>
